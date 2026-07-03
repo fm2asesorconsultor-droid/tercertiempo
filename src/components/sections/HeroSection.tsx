@@ -56,13 +56,29 @@ export function HeroSection() {
             </FadeIn>
           </div>
           
-          {/* Columna Derecha: Objeto 3D (Oculto en móvil para evitar crashes de WebGL) */}
-          <div className="hidden md:flex relative mt-12 lg:col-span-4 lg:mt-0 flex-col items-center justify-center">
-            <FadeIn delay={0.4} direction="left" className="w-full h-full relative z-10">
+          {/* Columna Derecha: Balón (3D en Desktop, SVG animado en Móvil) */}
+          <div className="relative mt-12 lg:col-span-4 lg:mt-0 flex flex-col items-center justify-center">
+            
+            {/* Versión 3D Real - Solo Desktop (Evita crashes de memoria WebGL en móviles) */}
+            <FadeIn delay={0.4} direction="left" className="w-full h-full relative z-10 hidden md:block">
               <Football3D />
             </FadeIn>
-            {/* Indicador interactivo */}
-            <FadeIn delay={0.8} direction="up" className="absolute -bottom-4 lg:bottom-4 z-20 flex flex-col items-center justify-center pointer-events-none opacity-80 -translate-x-[25px]">
+
+            {/* Versión Ligera (SVG) - Solo Móvil (Gira con CSS puro, cero crashes) */}
+            <FadeIn delay={0.4} direction="left" className="flex md:hidden justify-center items-center w-full h-[300px] relative z-10">
+              <div className="relative w-64 h-64 mx-auto drop-shadow-[0_0_30px_rgba(255,69,0,0.4)]">
+                <Image 
+                  src="/soccer_ball.svg" 
+                  alt="Balón de Fútbol" 
+                  fill
+                  className="object-contain animate-[spin_10s_linear_infinite] brightness-150 contrast-125"
+                  priority
+                />
+              </div>
+            </FadeIn>
+
+            {/* Indicador interactivo (Solo desktop porque el SVG de móvil no se arrastra) */}
+            <FadeIn delay={0.8} direction="up" className="hidden md:flex absolute -bottom-4 lg:bottom-4 z-20 flex-col items-center justify-center pointer-events-none opacity-80 -translate-x-[25px]">
               <MousePointer2 className="h-6 w-6 text-accent-primary animate-bounce mb-1 drop-shadow-md" />
               <span className="text-[10px] font-bold text-white tracking-widest uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Gira el balón</span>
             </FadeIn>
