@@ -56,8 +56,8 @@ export function HeroSection() {
             </FadeIn>
           </div>
           
-          {/* Columna Derecha: Objeto 3D */}
-          <div className="relative mt-12 lg:col-span-4 lg:mt-0 flex flex-col items-center justify-center">
+          {/* Columna Derecha: Objeto 3D (Oculto en móvil para evitar crashes de WebGL) */}
+          <div className="hidden md:flex relative mt-12 lg:col-span-4 lg:mt-0 flex-col items-center justify-center">
             <FadeIn delay={0.4} direction="left" className="w-full h-full relative z-10">
               <Football3D />
             </FadeIn>
