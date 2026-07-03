@@ -270,9 +270,7 @@ function PremiumBall() {
 
 export function Football3D() {
   return (
-    // Contenedor ensanchado (w-[140%]) y centrado (-ml-[20%]) para evitar cualquier recorte en monitores estrechos.
-    // Desplazado 25px a la izquierda con translate-x. El contenedor padre maneja los z-index.
-    <div className="w-[140%] h-full min-h-[500px] lg:min-h-[600px] relative -ml-[20%] translate-x-[-25px] cursor-grab active:cursor-grabbing">
+    <div className="w-[120%] h-[350px] md:w-[140%] md:h-full md:min-h-[500px] lg:min-h-[600px] relative -ml-[10%] md:-ml-[20%] translate-x-[-15px] md:translate-x-[-25px] cursor-grab active:cursor-grabbing">
       <Canvas camera={{ position: [0, 0, 9], fov: 50 }}>
         <Suspense fallback={null}>
           <PremiumBall />
@@ -280,6 +278,8 @@ export function Football3D() {
         <OrbitControls
           enableZoom={false}
           enablePan={false}
+          autoRotate={true}
+          autoRotateSpeed={2.0}
           minPolarAngle={Math.PI / 3}
           maxPolarAngle={Math.PI / 1.8}
         />
