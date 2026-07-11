@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button"
 import { FadeIn } from "@/components/ui/FadeIn"
 import { Football3D } from "@/components/ui/Football3D"
+import { FootballMobileSprite } from "@/components/ui/FootballMobileSprite"
 import Image from "next/image"
 import { Play, ChevronRight, Monitor, Sofa, ShoppingBag, MousePointer2 } from "lucide-react"
 
@@ -64,21 +65,13 @@ export function HeroSection() {
               <Football3D />
             </FadeIn>
 
-            {/* Versión Ligera (SVG) - Solo Móvil (Gira con CSS puro, cero crashes) */}
+            {/* Versión Ligera (Sprite 360°) - Solo Móvil (arrastre táctil, cero WebGL, cero crashes) */}
             <FadeIn delay={0.4} direction="left" className="flex md:hidden justify-center items-center w-full h-[300px] relative z-10">
-              <div className="relative w-64 h-64 mx-auto drop-shadow-[0_0_30px_rgba(255,69,0,0.4)]">
-                <Image 
-                  src="/soccer_ball.svg" 
-                  alt="Balón de Fútbol" 
-                  fill
-                  className="object-contain animate-[spin_10s_linear_infinite] brightness-150 contrast-125"
-                  priority
-                />
-              </div>
+              <FootballMobileSprite />
             </FadeIn>
 
-            {/* Indicador interactivo (Solo desktop porque el SVG de móvil no se arrastra) */}
-            <FadeIn delay={0.8} direction="up" className="hidden md:flex absolute -bottom-4 lg:bottom-4 z-20 flex-col items-center justify-center pointer-events-none opacity-80 -translate-x-[25px]">
+            {/* Indicador interactivo (mismo mensaje en desktop y móvil, ambos son arrastrables) */}
+            <FadeIn delay={0.8} direction="up" className="flex absolute -bottom-4 lg:bottom-4 z-20 flex-col items-center justify-center pointer-events-none opacity-80 md:-translate-x-[25px]">
               <MousePointer2 className="h-6 w-6 text-accent-primary animate-bounce mb-1 drop-shadow-md" />
               <span className="text-[10px] font-bold text-white tracking-widest uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Gira el balón</span>
             </FadeIn>
