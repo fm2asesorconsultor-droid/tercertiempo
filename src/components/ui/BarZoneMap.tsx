@@ -1,31 +1,15 @@
 "use client"
 
 import { motion } from "framer-motion"
-
-type Zone = {
-  id: string
-  name: string
-  floor: 1 | 2
-  capacity: string
-  price: string
-  description: string
-}
-
-export const barZones: Zone[] = [
-  { id: "salon", name: "Salón Pantalla Gigante", floor: 1, capacity: "Hasta 60 personas", price: "Desde $20.000/mesa", description: "La mejor vista al marcador. Ambiente eléctrico." },
-  { id: "barra", name: "La Barra", floor: 1, capacity: "Hasta 12 taburetes", price: "Consumo mínimo", description: "Cerca de la acción. Ideal para parejas o amigos." },
-  { id: "terraza", name: "Terraza", floor: 2, capacity: "Hasta 30 personas", price: "Desde $15.000/mesa", description: "Aire fresco, brisa y pantalla exterior. Vive el partido bajo las estrellas." },
-  { id: "cancha", name: "Cancha Sintética", floor: 2, capacity: "Hasta 14 jugadores", price: "Desde $150.000/hora", description: "Calienta antes del partido. Alquiler por hora." },
-  { id: "vip1", name: "Sala VIP Campeones", floor: 2, capacity: "Hasta 10 personas", price: "Desde $350.000", description: "Sofás de cuero, pantalla 85\", ambiente privado." },
-  { id: "vip2", name: "Sala VIP Leyendas", floor: 2, capacity: "Hasta 10 personas", price: "Desde $350.000", description: "Sillas huevo en cuero, pantalla 85\", privacidad total." },
-]
+import type { Zone } from "@/generated/prisma/client"
 
 type Props = {
+  zones: Zone[]
   selected: string | null
   onSelect: (id: string) => void
 }
 
-export function BarZoneMap({ selected, onSelect }: Props) {
+export function BarZoneMap({ zones, selected, onSelect }: Props) {
   const getZoneStyle = (id: string) => ({
     fill: selected === id ? "rgba(255,69,0,0.5)" : "rgba(255,255,255,0.05)",
     stroke: selected === id ? "#FF4500" : "rgba(255,255,255,0.2)",
@@ -126,7 +110,7 @@ export function BarZoneMap({ selected, onSelect }: Props) {
 
       {/* Zone Detail Card */}
       {selected && (() => {
-        const zone = barZones.find(z => z.id === selected)
+        const zone = zones.find(z => z.slug === selected)
         if (!zone) return null
         return (
           <motion.div
@@ -142,8 +126,8 @@ export function BarZoneMap({ selected, onSelect }: Props) {
               <h4 className="font-bold text-white">{zone.name}</h4>
               <p className="text-zinc-400 text-sm">{zone.description}</p>
               <div className="flex gap-4 mt-2">
-                <span className="text-xs text-accent-primary font-bold">{zone.capacity}</span>
-                <span className="text-xs text-zinc-500">{zone.price}</span>
+                <span className="text-xs text-accent-primary font-bold">{zone.capacityLabel}</span>
+                <span className="text-xs text-zinc-500">{zone.priceLabel}</span>
               </div>
             </div>
           </motion.div>

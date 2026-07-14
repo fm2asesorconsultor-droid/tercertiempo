@@ -63,5 +63,32 @@ Todas las siguientes imágenes fueron generadas en alta calidad fotorealista y a
 - `gallery_tienda.png`
 - `premium_experience.png`
 
-## 5. Pendientes y Próximos Pasos (To-Do)
-*(Agrega aquí cualquier idea futura, optimización móvil específica o integraciones de backend que el proyecto requiera)*.
+## 5. Panel de Administración y Backend (Fases A-D)
+
+Contenido y operaciones **100% reales** — sin datos simulados — conectados de forma segura al frontend público vía Server Actions.
+
+- **Auth propia y ligera**: cookies firmadas con `jose` (JWT), hash de password con `bcryptjs`, DAL (`verifySession()`/`requireAdmin()`) revalidado en cada Server Action (no solo en el proxy), `sessionVersion` para poder revocar sesiones, rate-limit de login basado en BD (no en memoria, porque Vercel serverless no comparte memoria entre invocaciones).
+- **Base de datos**: Prisma 7 (generador `prisma-client`, salida en `src/generated/prisma`) sobre Postgres. En local corre en un contenedor Docker (`tercertiempo-db`, puerto 5433) — `prisma dev` no funciona en esta máquina.
+- **~28 modelos**: `AdminUser`, `SiteSettings` y todo el contenido de marketing (hero, galería, testimonios, partidos, zonas, salas VIP, productos, menú, cowork) más las entidades operativas reales: `Reservation` (unifica mesa/sala/partido), `ProductOrder`, `B2BQuote`, `NewsletterSubscriber`.
+- **Server Actions como base** (no rutas API sueltas): Next 16 protege automáticamente contra CSRF por header `Origin`; cada acción exportada arranca con `await requireAdmin()`.
+- **Cloudinary** para subida/borrado real de imágenes (`isCloudinaryConfigured()` hace fallback silencioso si no hay credenciales configuradas).
+- **Resend** para emails de confirmación transaccionales (opcional, nunca bloquea el flujo si no está configurado).
+- **Flujos antes simulados, ahora reales**: reserva de mesa/partido/sala VIP, pedido de tienda con QR real (`qrcode`), cotización B2B con precio recalculado en el servidor (nunca se confía en el total del cliente), newsletter.
+- **~30 páginas de admin** bajo `/admin/(dashboard)/...`, con patrón reutilizable: `FormField`, `ImageUploadField`, `DataTable`, `ConfirmDeleteButton`, `StatusSelect`.
+- **Logo real** de la marca en login y sidebar del admin (antes placeholder).
+
+## 6. Auditoría de UI por DOM (Mobile + Desktop)
+
+Metodología: muestreo del centro de cada elemento interactivo visible vía `document.elementFromPoint()` (Playwright), comparando contra overlays legítimos (drawers/backdrops `position:fixed`) para no marcar como bug capas de superposición intencionales (ej. fondo cubierto por un drawer abierto).
+
+- **Bug real encontrado y corregido**: `CoworkHero.tsx` en mobile — los CTAs ("Ver Paquetes"/"Cotizar Evento") quedaban tapados por la franja de estadísticas (`absolute bottom-0` sin reservar su propio espacio, colisionando con contenido centrado verticalmente). Solución: sección `flex-col` con la franja en flujo normal.
+- **Panel admin sin diseño responsive**: el sidebar fijo (`w-60`, ~240px) nunca colapsaba, causando overflow horizontal severo en todas las páginas autenticadas en mobile (confirmado en dashboard, formularios y listados). Solución: `AdminSidebar.tsx` — drawer off-canvas con botón hamburguesa y backdrop en mobile, sidebar estático desde `md:` en adelante; `min-w-0` en el `<main>` para que tablas anchas scrolleen en su propio contenedor.
+- **Salas VIP con flip-card solo por hover**: `SalasSelector.tsx` dependía de `group-hover` para revelar el botón "Reservar Ahora", inalcanzable en dispositivos táctiles reales (no hay hover en touch). Solución: estado `isFlipped` que también responde a tap/click, con `stopPropagation()` en el botón para que no vuelva a girar la tarjeta al reservar.
+- **Confirmado sin overlaps reales** (tras las correcciones): 9 páginas públicas, 30 estados de drawers/modales abiertos (reservar, partidos, salas-vip, tienda) y el panel admin completo (login, dashboard, formularios, listados) — en ambos viewports (390×844 mobile, 1440×900 desktop).
+- Un hallazgo de overflow horizontal en mobile home (24px) se investigó y se descartó como falso positivo: ya está contenido por `overflow-x-hidden` en `<body>`, sin scroll ni fuga visual real.
+
+## 7. Pendientes y Próximos Pasos (To-Do)
+
+- **Fase E (limpieza)**: eliminar arrays hardcodeados ya muertos tras la migración a datos reales; barrido de grep para confirmar cero placeholders del número de WhatsApp (`573000000000`) o email de prueba; revisar el filtro de fechas de `PartidosList.tsx` para casos límite; evaluar si sobra algún `"use client"` heredado del código anterior.
+- **Credenciales de producción**: `DATABASE_URL` de Postgres real (hoy local), `CLOUDINARY_*` y `RESEND_API_KEY` reales, `ADMIN_EMAIL`/`ADMIN_PASSWORD` de producción (hoy son credenciales de seed de desarrollo).
+- *(Agrega aquí cualquier otra idea futura u optimización específica que el proyecto requiera)*.

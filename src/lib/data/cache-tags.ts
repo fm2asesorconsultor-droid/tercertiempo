@@ -1,0 +1,16 @@
+export const CACHE_TAGS = {
+  siteSettings: "site-settings",
+  hero: "hero",
+  premiumExperience: "premium-experience",
+  birthday: "birthday",
+  gallery: "gallery",
+  testimonials: "testimonials",
+  teams: "teams",
+  matches: "matches",
+  matchDemand: "match-demand",
+  zones: "zones",
+  salasVip: "salas-vip",
+  products: "products",
+  menu: "menu",
+  cowork: "cowork",
+} as const;

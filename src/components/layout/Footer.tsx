@@ -1,21 +1,23 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/Input"
-import { Send, Users, Camera } from "lucide-react"
+import { Users, Camera } from "lucide-react"
+import { getSiteSettings } from "@/lib/data/site-settings"
+import { NewsletterForm } from "@/components/ui/NewsletterForm"
 
-export function Footer() {
+export async function Footer() {
+  const settings = await getSiteSettings()
+
   return (
     <footer className="border-t border-border-default bg-background-primary py-12 md:py-16">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Image 
-                src="/logo.png" 
-                alt="Tercer Tiempo Logo" 
-                width={160} 
-                height={48} 
+              <Image
+                src={settings.logoUrl}
+                alt="Tercer Tiempo Logo"
+                width={160}
+                height={48}
                 className="h-10 w-auto object-contain md:h-12"
               />
             </div>
@@ -25,14 +27,18 @@ export function Footer() {
               sigue después del pitazo final.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-text-muted hover:bg-accent-primary hover:text-white transition-colors">
-                <Camera className="h-4 w-4" />
-                <span className="sr-only">Instagram</span>
-              </Link>
-              <Link href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-text-muted hover:bg-accent-primary hover:text-white transition-colors">
-                <Users className="h-4 w-4" />
-                <span className="sr-only">Facebook</span>
-              </Link>
+              {settings.instagramUrl && (
+                <Link href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-text-muted hover:bg-accent-primary hover:text-white transition-colors">
+                  <Camera className="h-4 w-4" />
+                  <span className="sr-only">Instagram</span>
+                </Link>
+              )}
+              {settings.facebookUrl && (
+                <Link href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-text-muted hover:bg-accent-primary hover:text-white transition-colors">
+                  <Users className="h-4 w-4" />
+                  <span className="sr-only">Facebook</span>
+                </Link>
+              )}
             </div>
           </div>
           
@@ -63,18 +69,7 @@ export function Footer() {
             <p className="text-sm text-text-secondary">
               Sé el primero en enterarte de eventos, promociones, productos y reservas especiales.
             </p>
-            <form className="flex space-x-2">
-              <Input 
-                type="email" 
-                placeholder="Tu correo electrónico" 
-                className="max-w-[200px]"
-                required
-              />
-              <Button type="submit" size="icon">
-                <Send className="h-4 w-4" />
-                <span className="sr-only">Suscribirse</span>
-              </Button>
-            </form>
+            <NewsletterForm source="FOOTER" variant="footer" />
           </div>
 
         </div>

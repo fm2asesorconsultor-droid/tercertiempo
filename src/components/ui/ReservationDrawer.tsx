@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Calendar, Users, Trophy, ChevronRight, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import type { SalaVip } from "@/generated/prisma/client"
+import { createSalaReservationAction } from "@/lib/actions/reservations"
 
 interface ReservationDrawerProps {
   isOpen: boolean
   onClose: () => void
-  sala: any
+  sala: SalaVip | null
 }
 
 export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerProps) {
@@ -19,15 +21,39 @@ export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerPr
     people: 2,
     package: "basico",
     name: "",
-    phone: ""
+    phone: "",
+    email: "",
   })
+  const [confirmationCode, setConfirmationCode] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const handleNext = () => setStep(s => Math.min(s + 1, 4))
   const handleBack = () => setStep(s => Math.max(s - 1, 1))
 
   const handleComplete = (e: React.FormEvent) => {
     e.preventDefault()
-    setStep(4) // Success step
+    if (!sala) return
+    setSubmitError(null)
+
+    const fd = new FormData()
+    fd.set("customerName", formData.name)
+    fd.set("customerPhone", formData.phone)
+    fd.set("customerEmail", formData.email)
+    fd.set("partySize", String(formData.people))
+    fd.set("salaVipId", String(sala.id))
+    fd.set("salaPackage", formData.package)
+    fd.set("date", formData.date)
+
+    startTransition(async () => {
+      const result = await createSalaReservationAction(fd)
+      if (result.ok) {
+        setConfirmationCode(result.confirmationCode)
+        setStep(4)
+      } else {
+        setSubmitError(result.error)
+      }
+    })
   }
 
   return (
@@ -187,7 +213,7 @@ export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerPr
                       </div>
                       <div>
                         <label className="text-sm text-zinc-400 mb-2 block">WhatsApp</label>
-                        <Input 
+                        <Input
                           required
                           type="tel"
                           value={formData.phone}
@@ -195,7 +221,16 @@ export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerPr
                           className="w-full bg-zinc-900 border-zinc-800"
                         />
                       </div>
-                      
+                      <div>
+                        <label className="text-sm text-zinc-400 mb-2 block">Correo (opcional, para confirmación)</label>
+                        <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full bg-zinc-900 border-zinc-800"
+                        />
+                      </div>
+
                       <div className="bg-zinc-900 p-4 rounded-lg mt-6 border border-zinc-800">
                         <h5 className="font-bold text-white text-sm mb-2">Resumen:</h5>
                         <ul className="text-sm text-zinc-400 space-y-1">
@@ -206,9 +241,15 @@ export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerPr
                         </ul>
                       </div>
 
+                      {submitError && (
+                        <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-4 py-3">{submitError}</p>
+                      )}
+
                       <div className="flex gap-4 pt-4">
                         <Button type="button" variant="outline" onClick={handleBack} className="w-full h-12 border-zinc-700">Atrás</Button>
-                        <Button type="submit" className="w-full h-12">Confirmar Reserva</Button>
+                        <Button type="submit" className="w-full h-12" disabled={isPending}>
+                          {isPending ? "Confirmando..." : "Confirmar Reserva"}
+                        </Button>
                       </div>
                     </form>
                   </motion.div>
@@ -227,8 +268,12 @@ export function ReservationDrawer({ isOpen, onClose, sala }: ReservationDrawerPr
                     </div>
                     <h3 className="text-2xl font-bold text-white">¡Reserva Confirmada!</h3>
                     <p className="text-zinc-400">
-                      Hola {formData.name}, hemos recibido tu solicitud. Te enviaremos un mensaje a tu WhatsApp ({formData.phone}) con los detalles.
+                      Hola {formData.name}, tu reserva quedó registrada. Te contactaremos a tu WhatsApp ({formData.phone}) con los detalles.
                     </p>
+                    <div className="w-full p-4 bg-zinc-900 border-l-4 border-accent-primary text-left rounded-r-lg">
+                      <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">Código de confirmación</p>
+                      <p className="text-accent-primary font-black text-xl tracking-widest">{confirmationCode}</p>
+                    </div>
                     <Button onClick={onClose} className="mt-8 w-full h-12">
                       Volver a Salas
                     </Button>

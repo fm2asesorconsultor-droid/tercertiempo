@@ -1,52 +1,50 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MessageCircle, ChevronDown } from "lucide-react"
+import { MessageCircle, ChevronDown, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-
-const eventTypes = ["Reunión de equipo", "Taller Lego Serious Play", "Design Thinking / Sprint", "Team Building", "Coaching Ejecutivo", "Capacitación / Formación", "Lanzamiento de producto", "Otro"]
-
-const extras = [
-  { id: "catering", label: "Catering personalizado", price: 80000 },
-  { id: "facilitador", label: "Facilitador profesional", price: 350000 },
-  { id: "lsp-kit", label: "Kit Lego Serious Play", price: 200000 },
-  { id: "fotografia", label: "Fotografía del evento", price: 120000 },
-  { id: "streaming", label: "Transmisión en vivo", price: 180000 },
-  { id: "vip", label: "Sala VIP privada", price: 250000 },
-]
-
-const baseRates: Record<string, number> = {
-  "medio-tiempo": 250000,
-  "tiempo-completo": 480000,
-  "estadio": 800000,
-}
+import type { CoworkPackage, QuoteExtra, EventType } from "@/generated/prisma/client"
+import { createB2BQuoteAction } from "@/lib/actions/b2b-quotes"
 
 const formatCOP = (n: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n)
 
-export function B2BQuoteForm() {
+type Props = {
+  packages: CoworkPackage[]
+  extras: QuoteExtra[]
+  eventTypes: EventType[]
+  whatsappNumber: string
+}
+
+export function B2BQuoteForm({ packages, extras, eventTypes, whatsappNumber }: Props) {
   const [form, setForm] = useState({
     company: "",
     name: "",
     phone: "",
+    email: "",
     eventType: "",
-    packageId: "tiempo-completo",
+    packageId: packages[1]?.id ?? packages[0]?.id ?? 0,
     participants: 20,
     date: "",
+    message: "",
   })
   const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const toggleExtra = (id: string) => {
     setSelectedExtras(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id])
   }
 
   const extrasTotal = selectedExtras.reduce((sum, id) => {
-    const extra = extras.find(e => e.id === id)
+    const extra = extras.find(e => String(e.id) === id)
     return sum + (extra?.price ?? 0)
   }, 0)
 
-  const basePrice = baseRates[form.packageId] ?? 0
+  const selectedPackage = packages.find(p => p.id === form.packageId)
+  const basePrice = selectedPackage?.price ?? 0
   const participantSurcharge = form.participants > 30 ? Math.floor((form.participants - 30) / 10) * 50000 : 0
   const total = basePrice + participantSurcharge + extrasTotal
 
@@ -56,14 +54,40 @@ export function B2BQuoteForm() {
     `👤 Contacto: ${form.name}\n` +
     `📱 Teléfono: ${form.phone}\n` +
     `📋 Tipo de evento: ${form.eventType}\n` +
-    `📦 Paquete: ${form.packageId}\n` +
+    `📦 Paquete: ${selectedPackage?.name ?? ""}\n` +
     `👥 Participantes: ${form.participants}\n` +
     `📅 Fecha tentativa: ${form.date}\n` +
-    `➕ Extras: ${selectedExtras.length > 0 ? selectedExtras.join(", ") : "Ninguno"}\n\n` +
+    `➕ Extras: ${selectedExtras.length > 0 ? extras.filter(e => selectedExtras.includes(String(e.id))).map(e => e.label).join(", ") : "Ninguno"}\n\n` +
     `💰 Presupuesto estimado: ${formatCOP(total)}\n\n` +
     `¡Quedo atento a su propuesta!`
   )
-  const whatsappUrl = `https://wa.me/573000000000?text=${whatsappMessage}`
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
+
+  const canSubmit = form.company.trim() !== "" && form.name.trim() !== "" && form.phone.trim() !== "" && form.eventType !== ""
+
+  const handleSubmit = () => {
+    setSubmitError(null)
+    const fd = new FormData()
+    fd.set("packageId", String(form.packageId))
+    fd.set("eventType", form.eventType)
+    fd.set("participants", String(form.participants))
+    selectedExtras.forEach((id) => fd.append("extraIds", id))
+    fd.set("companyName", form.company)
+    fd.set("customerName", form.name)
+    fd.set("customerPhone", form.phone)
+    fd.set("customerEmail", form.email)
+    fd.set("preferredDate", form.date)
+    fd.set("message", form.message)
+
+    startTransition(async () => {
+      const result = await createB2BQuoteAction(fd)
+      if (result.ok) {
+        setSubmitted(true)
+      } else {
+        setSubmitError(result.error)
+      }
+    })
+  }
 
   return (
     <section id="cotizar" className="py-24 bg-background-primary border-t border-zinc-900">
@@ -106,6 +130,20 @@ export function B2BQuoteForm() {
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-accent-primary transition-colors text-sm"
                 />
               </div>
+              <input
+                type="email"
+                placeholder="Correo (opcional, para confirmación)"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-accent-primary transition-colors text-sm"
+              />
+              <textarea
+                placeholder="Mensaje adicional (opcional)"
+                value={form.message}
+                onChange={e => setForm({ ...form, message: e.target.value })}
+                rows={2}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-accent-primary transition-colors text-sm"
+              />
             </div>
 
             {/* Event Type */}
@@ -118,7 +156,7 @@ export function B2BQuoteForm() {
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-primary transition-colors text-sm appearance-none"
                 >
                   <option value="" disabled>Selecciona el tipo de evento *</option>
-                  {eventTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                  {eventTypes.map(t => <option key={t.id} value={t.label}>{t.label}</option>)}
                 </select>
                 <ChevronDown className="absolute right-4 top-3.5 w-4 h-4 text-zinc-400 pointer-events-none" />
               </div>
@@ -134,11 +172,7 @@ export function B2BQuoteForm() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
               <h3 className="text-white font-bold text-lg border-b border-zinc-800 pb-4">3. Paquete base</h3>
               <div className="grid grid-cols-1 gap-3">
-                {[
-                  { id: "medio-tiempo", name: "Medio Tiempo (AM)", price: "$ 250.000" },
-                  { id: "tiempo-completo", name: "Tiempo Completo (Full Day)", price: "$ 480.000" },
-                  { id: "estadio", name: "Paquete Estadio (Especial)", price: "$ 800.000" },
-                ].map(pkg => (
+                {packages.map(pkg => (
                   <button
                     key={pkg.id}
                     onClick={() => setForm({ ...form, packageId: pkg.id })}
@@ -149,7 +183,7 @@ export function B2BQuoteForm() {
                     }`}
                   >
                     <span>{pkg.name}</span>
-                    <span className={form.packageId === pkg.id ? "text-accent-primary" : "text-zinc-500"}>{pkg.price}</span>
+                    <span className={form.packageId === pkg.id ? "text-accent-primary" : "text-zinc-500"}>{formatCOP(pkg.price)}</span>
                   </button>
                 ))}
               </div>
@@ -188,15 +222,15 @@ export function B2BQuoteForm() {
                 {extras.map(extra => (
                   <button
                     key={extra.id}
-                    onClick={() => toggleExtra(extra.id)}
+                    onClick={() => toggleExtra(String(extra.id))}
                     className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-all ${
-                      selectedExtras.includes(extra.id)
+                      selectedExtras.includes(String(extra.id))
                         ? "bg-accent-primary/10 border-accent-primary text-white"
                         : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-white"
                     }`}
                   >
                     <span>{extra.label}</span>
-                    <span className={`font-bold text-xs ${selectedExtras.includes(extra.id) ? "text-accent-primary" : "text-zinc-500"}`}>
+                    <span className={`font-bold text-xs ${selectedExtras.includes(String(extra.id)) ? "text-accent-primary" : "text-zinc-500"}`}>
                       +{formatCOP(extra.price)}
                     </span>
                   </button>
@@ -222,7 +256,7 @@ export function B2BQuoteForm() {
                   </div>
                 )}
                 {selectedExtras.map(id => {
-                  const extra = extras.find(e => e.id === id)
+                  const extra = extras.find(e => String(e.id) === id)
                   return extra ? (
                     <div key={id} className="flex justify-between">
                       <span className="text-zinc-400">{extra.label}</span>
@@ -250,18 +284,40 @@ export function B2BQuoteForm() {
                 <p className="text-xs text-zinc-500 mt-1">Precio estimado · Sujeto a confirmación</p>
               </div>
 
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)] hover:shadow-[0_0_30px_rgba(22,163,74,0.5)]"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Enviar cotización por WhatsApp
-              </a>
-              <p className="text-xs text-zinc-600 text-center">
-                Se abrirá WhatsApp con el resumen completo de tu evento listo para enviar
-              </p>
+              {submitted ? (
+                <div className="flex items-start gap-3 bg-green-600/10 border border-green-600/30 rounded-xl p-4">
+                  <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
+                  <div>
+                    <p className="text-white font-bold text-sm">¡Solicitud enviada!</p>
+                    <p className="text-zinc-400 text-xs mt-1">Quedó registrada en nuestro sistema. Te contactaremos pronto.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {submitError && (
+                    <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-4 py-3">{submitError}</p>
+                  )}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!canSubmit || isPending}
+                    className="w-full py-4 h-auto text-base font-bold"
+                  >
+                    {isPending ? "Enviando..." : "Enviar solicitud de cotización"}
+                  </Button>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-green-600/10 hover:bg-green-600/20 border border-green-600/30 text-green-500 font-bold py-3 rounded-xl transition-all text-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Avisar también por WhatsApp
+                  </a>
+                  <p className="text-xs text-zinc-600 text-center">
+                    Al enviar, tu solicitud queda registrada en nuestro sistema. El WhatsApp es opcional.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

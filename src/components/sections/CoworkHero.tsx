@@ -4,10 +4,15 @@ import { motion } from "framer-motion"
 import { Sun, Moon } from "lucide-react"
 import { FadeIn } from "@/components/ui/FadeIn"
 import Link from "next/link"
+import type { CoworkStat } from "@/generated/prisma/client"
 
-export function CoworkHero() {
+type Props = {
+  stats: CoworkStat[]
+}
+
+export function CoworkHero({ stats }: Props) {
   return (
-    <section className="relative min-h-[85vh] w-full overflow-hidden flex items-center justify-center">
+    <section className="relative min-h-[85vh] w-full overflow-hidden flex flex-col">
       {/* Background image */}
       <div className="absolute inset-0 z-0">
         <img
@@ -30,7 +35,8 @@ export function CoworkHero() {
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 text-center pt-20">
+      {/* Main content — flex-1 so it centers within whatever space remains above the stats strip, instead of an absolute-positioned strip risking overlap with vertically-centered content on short/mobile viewports */}
+      <div className="relative z-10 flex-1 flex items-center justify-center container mx-auto px-4 text-center pt-20 pb-8">
         <FadeIn direction="up">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
@@ -58,18 +64,13 @@ export function CoworkHero() {
         </FadeIn>
       </div>
 
-      {/* Stats strip */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-black/40 backdrop-blur-md">
+      {/* Stats strip — normal flow (not absolute), so it always reserves its own space instead of risking overlap */}
+      <div className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          {[
-            ["60+", "Personas capacidad"],
-            ["2", "Salas VIP privadas"],
-            ["85\"", "Pantallas 4K"],
-            ["100%", "WiFi empresarial"],
-          ].map(([num, label]) => (
-            <div key={label}>
-              <p className="text-2xl font-black text-accent-primary">{num}</p>
-              <p className="text-xs text-zinc-400">{label}</p>
+          {stats.map((stat) => (
+            <div key={stat.id}>
+              <p className="text-2xl font-black text-accent-primary">{stat.value}</p>
+              <p className="text-xs text-zinc-400">{stat.label}</p>
             </div>
           ))}
         </div>

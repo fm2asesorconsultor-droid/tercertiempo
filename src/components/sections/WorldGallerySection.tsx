@@ -1,16 +1,12 @@
 import { FadeIn } from "@/components/ui/FadeIn"
 import { Button } from "@/components/ui/Button"
-import { ArrowRight, Image as ImageIcon } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
+import { getFeaturedGalleryImages } from "@/lib/data/gallery"
+import { HOME_BENTO_SPAN } from "@/lib/gallery-spans"
 
-export function WorldGallerySection() {
-  const images = [
-    { title: "El Bar Central", image: "/gallery_bar_central.png", gridSpan: "md:col-span-2 md:row-span-2" },
-    { title: "Sala VIP 1", image: "/gallery_sala_vip.png", gridSpan: "md:col-span-1 md:row-span-1" },
-    { title: "Platos Premium", image: "/gallery_platos.png", gridSpan: "md:col-span-1 md:row-span-1" },
-    { title: "Tienda Oficial", image: "/gallery_tienda.png", gridSpan: "md:col-span-2 md:row-span-1" },
-  ]
+export async function WorldGallerySection() {
+  const images = await getFeaturedGalleryImages()
 
   return (
     <section className="w-full bg-background-primary pt-[25px] pb-[25px]">
@@ -24,26 +20,26 @@ export function WorldGallerySection() {
               Un vistazo a las instalaciones de Tercer Tiempo. Diseño de vanguardia, confort absoluto y la mejor atmósfera para disfrutar.
             </p>
           </FadeIn>
-          
+
           <FadeIn delay={0.2} direction="left">
             <Button variant="outline" className="hidden group md:flex">
               VER GALERÍA COMPLETA <ArrowRight className="ml-2 h-4 w-4 text-accent-primary group-hover:text-white" />
             </Button>
           </FadeIn>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:grid-rows-2 md:h-[500px] lg:h-[600px]">
           {images.map((img, idx) => (
-            <FadeIn 
-              key={idx} 
-              delay={0.1 * idx} 
-              className={`group relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 h-[220px] md:h-auto ${img.gridSpan}`}
+            <FadeIn
+              key={img.id}
+              delay={0.1 * idx}
+              className={`group relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 h-[220px] md:h-auto ${HOME_BENTO_SPAN[img.gridSpan ?? "normal"] ?? HOME_BENTO_SPAN.normal}`}
             >
-              <Image 
-                src={img.image} 
-                alt={img.title} 
-                fill 
-                className="object-cover transition-transform duration-700 group-hover:scale-110" 
+              <Image
+                src={img.imageUrl}
+                alt={img.title}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-100" />
               <div className="absolute inset-0 flex flex-col justify-end p-6">
@@ -52,7 +48,7 @@ export function WorldGallerySection() {
             </FadeIn>
           ))}
         </div>
-        
+
         <div className="mt-8 md:hidden">
           <Button variant="outline" className="w-full group">
             VER GALERÍA COMPLETA <ArrowRight className="ml-2 h-4 w-4 text-accent-primary group-hover:text-white" />

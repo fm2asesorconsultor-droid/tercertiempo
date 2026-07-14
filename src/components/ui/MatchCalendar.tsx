@@ -4,17 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-// Simulated match data keyed by date string "YYYY-MM-DD"
-const matchDays: Record<string, { teams: string; demand: "high" | "mid" | "low" }> = {
-  "2026-07-04": { teams: "Colombia vs Brasil", demand: "high" },
-  "2026-07-05": { teams: "Argentina vs Uruguay", demand: "high" },
-  "2026-07-06": { teams: "España vs Francia", demand: "mid" },
-  "2026-07-08": { teams: "USA vs México", demand: "mid" },
-  "2026-07-10": { teams: "Alemania vs Portugal", demand: "low" },
-  "2026-07-12": { teams: "Final Mundial 2026", demand: "high" },
-  "2026-07-13": { teams: "Liverpool vs Chelsea", demand: "low" },
-  "2026-07-15": { teams: "Real Madrid vs Barça", demand: "high" },
-}
+export type MatchDay = { teams: string; demand: "high" | "mid" | "low" }
 
 const demandColors: Record<string, string> = {
   high: "bg-red-500",
@@ -26,11 +16,12 @@ const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 type Props = {
+  matchDays: Record<string, MatchDay>
   selected: string | null
   onSelect: (date: string) => void
 }
 
-export function MatchCalendar({ selected, onSelect }: Props) {
+export function MatchCalendar({ matchDays, selected, onSelect }: Props) {
   const today = new Date()
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
 

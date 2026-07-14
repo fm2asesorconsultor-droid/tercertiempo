@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { User, MapPin, CalendarDays, CheckCircle2, ChevronRight, ChevronLeft, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import { BarZoneMap, barZones } from "@/components/ui/BarZoneMap"
-import { MatchCalendar } from "@/components/ui/MatchCalendar"
+import { BarZoneMap } from "@/components/ui/BarZoneMap"
+import { MatchCalendar, type MatchDay } from "@/components/ui/MatchCalendar"
+import type { Zone } from "@/generated/prisma/client"
+import { createMesaReservationAction } from "@/lib/actions/reservations"
 
 const STEPS = [
   { id: 1, icon: User, label: "Tu Info", description: "Cuéntanos quién eres" },
@@ -14,16 +16,20 @@ const STEPS = [
   { id: 4, icon: CheckCircle2, label: "Confirmación", description: "¡Todo listo!" },
 ]
 
-function generateCode() {
-  return `#TT-2026-${String(Math.floor(Math.random() * 9000) + 1000)}`
+type Props = {
+  zones: Zone[]
+  matchDays: Record<string, MatchDay>
+  whatsappNumber: string
 }
 
-export function ReservationStepper() {
+export function ReservationStepper({ zones, matchDays, whatsappNumber }: Props) {
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ name: "", phone: "", guests: "2" })
+  const [form, setForm] = useState({ name: "", phone: "", email: "", guests: "2" })
   const [zone, setZone] = useState<string | null>(null)
   const [date, setDate] = useState<string | null>(null)
-  const [reservationCode] = useState(generateCode)
+  const [reservationCode, setReservationCode] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const canProceed = () => {
     if (step === 1) return form.name.trim() !== "" && form.phone.trim() !== ""
@@ -37,12 +43,36 @@ export function ReservationStepper() {
     return `${day}/${m}/${y}`
   }
 
-  const selectedZone = barZones.find(z => z.id === zone)
+  const selectedZone = zones.find(z => z.slug === zone)
 
-  const whatsappMessage = encodeURIComponent(
-    `Hola Tercer Tiempo! 👋\n\nQuiero confirmar mi reserva:\n\n🔑 Código: ${reservationCode}\n👤 Nombre: ${form.name}\n👥 Personas: ${form.guests}\n📍 Zona: ${selectedZone?.name}\n📅 Fecha: ${date ? formatDate(date) : ""}\n📱 Teléfono: ${form.phone}\n\n¡Los espero!`
-  )
-  const whatsappUrl = `https://wa.me/573000000000?text=${whatsappMessage}`
+  const handleConfirm = () => {
+    if (!zone || !date) return
+    setSubmitError(null)
+    const formData = new FormData()
+    formData.set("customerName", form.name)
+    formData.set("customerPhone", form.phone)
+    formData.set("customerEmail", form.email)
+    formData.set("partySize", form.guests.replace("+", ""))
+    formData.set("zoneSlug", zone)
+    formData.set("date", date)
+
+    startTransition(async () => {
+      const result = await createMesaReservationAction(formData)
+      if (result.ok) {
+        setReservationCode(result.confirmationCode)
+        setStep(4)
+      } else {
+        setSubmitError(result.error)
+      }
+    })
+  }
+
+  const whatsappMessage = reservationCode
+    ? encodeURIComponent(
+        `Hola Tercer Tiempo! 👋\n\nQuiero confirmar mi reserva:\n\n🔑 Código: ${reservationCode}\n👤 Nombre: ${form.name}\n👥 Personas: ${form.guests}\n📍 Zona: ${selectedZone?.name}\n📅 Fecha: ${date ? formatDate(date) : ""}\n📱 Teléfono: ${form.phone}\n\n¡Los espero!`
+      )
+    : ""
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -105,6 +135,16 @@ export function ReservationStepper() {
                     />
                   </div>
                   <div>
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block mb-2">Correo (opcional, para confirmación)</label>
+                    <input
+                      type="email"
+                      placeholder="tucorreo@ejemplo.com"
+                      value={form.email}
+                      onChange={e => setForm({ ...form, email: e.target.value })}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-accent-primary transition-colors"
+                    />
+                  </div>
+                  <div>
                     <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block mb-2">¿Cuántos son? *</label>
                     <div className="flex gap-3 flex-wrap">
                       {["1","2","3","4","5","6","7","8","10","12","15","20+"].map(n => (
@@ -131,7 +171,7 @@ export function ReservationStepper() {
               <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
                 <h2 className="text-2xl font-black text-white mb-2">Elige tu zona</h2>
                 <p className="text-zinc-400 text-sm mb-8">Haz clic directamente sobre el área del bar donde quieres estar</p>
-                <BarZoneMap selected={zone} onSelect={setZone} />
+                <BarZoneMap zones={zones} selected={zone} onSelect={setZone} />
               </motion.div>
             )}
 
@@ -140,7 +180,10 @@ export function ReservationStepper() {
               <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
                 <h2 className="text-2xl font-black text-white mb-2">Selecciona la fecha</h2>
                 <p className="text-zinc-400 text-sm mb-8">Los días con puntos de colores tienen partidos programados</p>
-                <MatchCalendar selected={date} onSelect={setDate} />
+                <MatchCalendar matchDays={matchDays} selected={date} onSelect={setDate} />
+                {submitError && (
+                  <p className="mt-4 text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-4 py-3">{submitError}</p>
+                )}
               </motion.div>
             )}
 
@@ -156,8 +199,8 @@ export function ReservationStepper() {
                   >
                     <CheckCircle2 className="w-10 h-10 text-accent-primary" />
                   </motion.div>
-                  <h2 className="text-2xl font-black text-white mb-1">¡Casi listo!</h2>
-                  <p className="text-zinc-400 text-sm">Confirma tu reserva por WhatsApp para asegurar tu lugar</p>
+                  <h2 className="text-2xl font-black text-white mb-1">¡Reserva confirmada!</h2>
+                  <p className="text-zinc-400 text-sm">Guarda tu código. Si quieres, avísanos también por WhatsApp.</p>
                 </div>
 
                 {/* Reservation Card */}
@@ -183,11 +226,11 @@ export function ReservationStepper() {
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 shadow-[0_0_25px_rgba(22,163,74,0.4)] hover:shadow-[0_0_35px_rgba(22,163,74,0.6)] transition-all">
                     <MessageCircle className="w-5 h-5 mr-3" />
-                    Confirmar por WhatsApp
+                    Avisar también por WhatsApp
                   </Button>
                 </a>
                 <p className="text-center text-xs text-zinc-600 mt-3">
-                  Se abrirá WhatsApp con tu resumen de reserva listo para enviar
+                  Tu reserva ya quedó registrada. Este paso es opcional.
                 </p>
               </motion.div>
             )}
@@ -206,11 +249,11 @@ export function ReservationStepper() {
               <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
             </Button>
             <Button
-              onClick={() => setStep(s => Math.min(4, s + 1))}
-              disabled={!canProceed()}
+              onClick={() => (step === 3 ? handleConfirm() : setStep(s => Math.min(4, s + 1)))}
+              disabled={!canProceed() || isPending}
               className="gap-2"
             >
-              {step === 3 ? "Ver Confirmación" : "Siguiente"}
+              {isPending ? "Confirmando..." : step === 3 ? "Confirmar Reserva" : "Siguiente"}
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

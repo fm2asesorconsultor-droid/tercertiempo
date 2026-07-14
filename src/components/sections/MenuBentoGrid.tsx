@@ -2,81 +2,35 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Flame, Info, Plus, ChevronUp, Beer, Coffee, Pizza, Beef } from "lucide-react"
+import { Flame, Plus, ChevronUp, Beer, Coffee, Pizza, Beef, type LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/Button"
+import type { MenuCategory, MenuItem } from "@/generated/prisma/client"
 
-const menuCategories = [
-  { id: "todos", name: "Todos", icon: null },
-  { id: "principales", name: "Principales", icon: Beef },
-  { id: "compartir", name: "Para Compartir", icon: Pizza },
-  { id: "cervezas", name: "Cervezas", icon: Beer },
-  { id: "cocteles", name: "Cócteles", icon: Coffee }, // Using coffee as a generic drink icon for now
-]
+const ICONS: Record<string, LucideIcon> = {
+  beef: Beef,
+  pizza: Pizza,
+  beer: Beer,
+  coffee: Coffee,
+}
 
-const menuItems = [
-  {
-    id: 1,
-    name: "La 'Hat-Trick' Burger",
-    description: "Tres carnes premium, tocineta crujiente, cheddar fundido, aros de cebolla bañados en cerveza y nuestra salsa BBQ ahumada secreta.",
-    price: 45000,
-    category: "principales",
-    image: "/menu/hat_trick_burger.png",
-    match: "Cerveza Artesanal Rubia",
-    isMVP: true, // Takes more space in the Bento Grid
-  },
-  {
-    id: 2,
-    name: "Picada 'El Clásico'",
-    description: "Chorizo, morcilla, chicharrón carnudo, papas rústicas, arepitas y empanadas. Para 4 personas (o 2 defensas centrales hambrientos).",
-    price: 85000,
-    category: "compartir",
-    image: "/menu/picada_clasico.png",
-    match: "Jarra de Cerveza 1L",
-    isMVP: true,
-  },
-  {
-    id: 3,
-    name: "Alitas 'Roja Directa'",
-    description: "Alitas bañadas en salsa picante Habanero intenso. Solo para los más valientes del estadio.",
-    price: 32000,
-    category: "compartir",
-    image: "/menu/alitas_roja_directa.png",
-    match: "Cóctel El Var (Para apagar el fuego)",
-    isMVP: false,
-  },
-  {
-    id: 4,
-    name: "Cerveza Artesanal 'Tercer Tiempo'",
-    description: "Lager rubia, ligera y muy fría. Servida en jarra helada. La bebida oficial de los 90 minutos.",
-    price: 15000,
-    category: "cervezas",
-    image: "/menu/cerveza_artesanal.png",
-    match: "Hat-Trick Burger",
-    isMVP: false,
-  },
-  {
-    id: 5,
-    name: "Cóctel 'El VAR'",
-    description: "Tequila, Blue Curaçao y limón, con un efecto de humo mágico que cambia de color. Tienes que revisarlo en pantalla.",
-    price: 28000,
-    category: "cocteles",
-    image: "/menu/coctel_var.png",
-    match: "Alitas Roja Directa",
-    isMVP: false,
-  }
-]
+type MenuItemWithCategory = MenuItem & { category: MenuCategory }
 
-export function MenuBentoGrid() {
+type Props = {
+  categories: MenuCategory[]
+  items: MenuItemWithCategory[]
+}
+
+export function MenuBentoGrid({ categories, items }: Props) {
   const [activeCategory, setActiveCategory] = useState("todos")
-  const [order, setOrder] = useState<any[]>([])
+  const [order, setOrder] = useState<MenuItemWithCategory[]>([])
   const [isOrderExpanded, setIsOrderExpanded] = useState(false)
   const [orderStatus, setOrderStatus] = useState<"idle" | "confirming" | "success">("idle")
 
-  const filteredItems = activeCategory === "todos" 
-    ? menuItems 
-    : menuItems.filter(item => item.category === activeCategory)
+  const filteredItems = activeCategory === "todos"
+    ? items
+    : items.filter((item) => item.categoryId === Number(activeCategory))
 
-  const addToOrder = (item: any) => {
+  const addToOrder = (item: MenuItemWithCategory) => {
     setOrder([...order, item])
     if (orderStatus === "success") setOrderStatus("idle")
   }
@@ -95,7 +49,7 @@ export function MenuBentoGrid() {
   }
 
   const orderTotal = order.reduce((sum, item) => sum + item.price, 0)
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(price)
   }
@@ -103,22 +57,33 @@ export function MenuBentoGrid() {
   return (
     <section className="pb-32 bg-background-primary min-h-screen relative pt-12">
       <div className="container mx-auto px-4 max-w-7xl">
-        
+
         {/* Categorías con Iconos */}
         <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-12 pb-2 md:justify-center">
-          {menuCategories.map((cat) => {
-            const Icon = cat.icon
+          <button
+            onClick={() => setActiveCategory("todos")}
+            className={`px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeCategory === "todos"
+                ? "bg-accent-primary text-white shadow-[0_0_15px_rgba(255,69,0,0.4)]"
+                : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            }`}
+          >
+            Todos
+          </button>
+          {categories.map((cat) => {
+            const Icon = ICONS[cat.iconKey] ?? Beef
+            const catKey = String(cat.id)
             return (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => setActiveCategory(catKey)}
                 className={`px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
-                  activeCategory === cat.id 
-                    ? "bg-accent-primary text-white shadow-[0_0_15px_rgba(255,69,0,0.4)]" 
+                  activeCategory === catKey
+                    ? "bg-accent-primary text-white shadow-[0_0_15px_rgba(255,69,0,0.4)]"
                     : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
-                {Icon && <Icon className="w-4 h-4" />}
+                <Icon className="w-4 h-4" />
                 {cat.name}
               </button>
             )
@@ -142,20 +107,22 @@ export function MenuBentoGrid() {
               >
                 {/* Imagen */}
                 <div className={`relative w-full ${item.isMVP ? 'h-72 md:h-96' : 'h-56'} overflow-hidden bg-black`}>
-                  <img 
-                    src={item.image} 
+                  <img
+                    src={item.imageUrl}
                     alt={item.name}
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
-                  
+
                   {/* Perfect Match Hover Reveal */}
-                  <div className="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-[-10px] group-hover:translate-y-0">
-                    <div className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-700 flex items-center gap-2 text-xs text-zinc-200">
-                      <Flame className="w-3 h-3 text-accent-primary" />
-                      <span>Match Perfecto: <strong className="text-white">{item.match}</strong></span>
+                  {item.pairingSuggestion && (
+                    <div className="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-[-10px] group-hover:translate-y-0">
+                      <div className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-700 flex items-center gap-2 text-xs text-zinc-200">
+                        <Flame className="w-3 h-3 text-accent-primary" />
+                        <span>Match Perfecto: <strong className="text-white">{item.pairingSuggestion}</strong></span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Contenido */}
@@ -171,10 +138,10 @@ export function MenuBentoGrid() {
                   <p className="text-zinc-400 text-sm mb-6 flex-1">
                     {item.description}
                   </p>
-                  
+
                   <div className="mt-auto">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full border-zinc-700 hover:bg-white hover:text-black hover:border-white transition-all group-hover:border-accent-primary group-hover:text-accent-primary group-hover:hover:bg-accent-primary group-hover:hover:text-white"
                       onClick={() => addToOrder(item)}
                     >
@@ -200,9 +167,9 @@ export function MenuBentoGrid() {
           >
             <div className="container mx-auto px-4 pb-6 pt-4 flex justify-center pointer-events-auto">
               <div className="bg-zinc-950 border border-zinc-800 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col">
-                
+
                 {/* Bar Header (Always visible) */}
-                <div 
+                <div
                   className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900 transition-colors"
                   onClick={() => setIsOrderExpanded(!isOrderExpanded)}
                 >
@@ -247,9 +214,9 @@ export function MenuBentoGrid() {
                           </div>
                         ) : (
                           <>
-                            <Button 
-                              variant="ghost" 
-                              className="text-zinc-400 hover:text-white" 
+                            <Button
+                              variant="ghost"
+                              className="text-zinc-400 hover:text-white"
                               onClick={() => {
                                 if (orderStatus === "confirming") setOrderStatus("idle")
                                 else setOrder([])
@@ -257,8 +224,8 @@ export function MenuBentoGrid() {
                             >
                               {orderStatus === "confirming" ? "Cancelar" : "Limpiar"}
                             </Button>
-                            <Button 
-                              className={orderStatus === "confirming" ? "bg-green-600 hover:bg-green-700 text-white shadow-[0_0_15px_rgba(22,163,74,0.5)]" : ""} 
+                            <Button
+                              className={orderStatus === "confirming" ? "bg-green-600 hover:bg-green-700 text-white shadow-[0_0_15px_rgba(22,163,74,0.5)]" : ""}
                               onClick={handleCallWaiter}
                             >
                               {orderStatus === "confirming" ? "Sí, confirmar pedido" : "Llamar Mesero"}

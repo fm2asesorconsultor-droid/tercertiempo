@@ -1,60 +1,37 @@
-# Estado del Proyecto: Tercer Tiempo
+# STATUS: Proyecto Tercer Tiempo Bar Deportivo
 
-## 🎯 Progreso Actual
+## Resumen del Proyecto
+Desarrollo de una plataforma web moderna, interactiva y de alto impacto visual para "Tercer Tiempo", un bar deportivo que también funciona como espacio de coworking y eventos corporativos durante el día.
 
-Hasta la fecha, hemos construido y finalizado con éxito la **Landing Page (Home)** de Tercer Tiempo. La página cuenta con un diseño premium, "Dark Mode" cinematográfico y detalles en naranja vibrante (`#FF4500`), enfocada en una experiencia de usuario moderna y de alto impacto.
+## Tecnologías Utilizadas
+- **Framework:** Next.js (App Router), React
+- **Estilos:** Tailwind CSS
+- **Animaciones:** Framer Motion
+- **Iconografía:** Lucide React
+- **Hosting / Deployment:** Vercel (conectado a repositorio GitHub `fm2asesorconsultor-droid/tercertiempo`)
+- **3D & Gráficos:** `@react-three/fiber`, `@react-three/drei` (Desktop) y animaciones CSS SVG (Móvil).
 
-### Componentes Completados:
-- **Navbar:** Navegación responsiva con menú hamburguesa y botón superior de reserva.
-- **Hero Section:** Diseño en dos columnas con un objeto 3D interactivo (balón de fútbol flotante y girable), botones CTA y un **ticker animado tipo marquesina** en la parte inferior con el texto en **color naranja** (`text-accent-primary`). En móvil, las tarjetas de experiencia funcionan como un carrusel táctil horizontal con snap.
-- **La Experiencia Definitiva:** Sección descriptiva con listado de beneficios (checkmarks) e imagen representativa con logo superpuesto.
-- **Cumpleaños Futbolero:** Sección promocional para grupos con imagen de celebración Colombia. Gradiente vertical en móvil para legibilidad del texto sobre la imagen. Padding reducido a `p-6 md:p-12 lg:p-16`.
-- **Próximos Partidos:** Grilla dinámica de 3 eventos deportivos con escudos SVG/PNG oficiales, estado VIP, fecha y hora. Tarjetas con hover iluminado naranja.
-- **Nuestro Mundo (Galería):** Cuadrícula asimétrica de 4 imágenes. En móvil, cada imagen tiene `h-[220px]` fijo sin contenedor de altura rígida (se eliminó el `h-[800px]` que generaba scroll excesivo).
-- **Newsletter (Únete al Equipo Titular):** Banda naranja completa con imagen PNG transparent de 3 hinchas (recorte manual en Photoshop) con efecto pop-out. En móvil la imagen se oculta (`hidden lg:flex`) y el texto/formulario quedan bien centrados.
-- **Footer:** Pie de página de 4 columnas, responsivo (colapsa a 2 en tablet y 1 en móvil), con logo, redes sociales, enlaces rápidos e información de contacto.
-- **Botón Flotante WhatsApp:** Animado (pulsante) fijo en la esquina inferior derecha.
+## Estado Actual: ✅ Desplegado (MVP Funcional y Visual)
 
-### Aspectos Técnicos:
-- **Framework:** Next.js 14 (App Router) + React 18 + TypeScript.
-- **Estilos:** Tailwind CSS con variables personalizadas. Color principal: `accent-primary` = `#FF4500`.
-- **Animaciones:** Framer Motion (componente `FadeIn` reutilizable) + CSS puro (marquesina, carruseles snap).
-- **3D:** React Three Fiber + Drei para el balón 3D interactivo.
-- **Responsividad:** 100% Mobile-First. `overflow-x-hidden` en `<body>` para evitar scroll horizontal. Breakpoints: `sm` (640px), `md` (768px), `lg` (1024px).
-- **Imágenes:** Todas en `/public`. La imagen `fans-transparent.png` fue recortada manualmente en Photoshop con canal alfa limpio.
+### Secciones Completadas
+1. **Inicio (`/`)**: Hero impactante, carrusel de destacados. *Se implementó un diseño responsivo inteligente para el Balón 3D: WebGL interactivo en Desktop y un SVG vectorizado ultraliviano con animación CSS en Móviles (para evitar crashes por falta de memoria).*
+2. **Menú (`/menu`)**: Diseño Bento Grid, filtros por categoría y un innovador simulador de "Cuenta Abierta" con botón de llamado a mesero con doble confirmación.
+3. **Galería (`/galeria`)**: Visualización en formato Bento Grid de los mejores momentos del bar.
+4. **Partidos (`/partidos`)**: Listado simulado de eventos deportivos con filtros.
+5. **Salas VIP (`/salas-vip`)**: Selector interactivo de espacios premium.
+6. **Tienda (`/tienda`)**: Catálogo de productos con imágenes reales e integración de un "Personalizador en Vivo" (Drawer) que superpone el texto en las camisetas y genera un código de reserva.
+7. **Cowork & Eventos (`/cowork`)**: Toggle "Modo Día / Modo Noche", paquetes corporativos, catálogo de servicios de consultoría (Lego Serious Play, Design Thinking, etc.) y un Formulario B2B Inteligente con cotizador en tiempo real.
+8. **Reservas y Contacto (`/reservar`, `/contacto`)**: Un proceso gamificado de reserva en 4 pasos (Stepper) que incluye:
+   - Mapa SVG Interactivo de los dos pisos del bar para seleccionar zona.
+   - Calendario vinculado a partidos para elegir fecha.
+   - Generación de reserva y conexión directa con WhatsApp pre-llenado.
 
----
-
-## 💡 Ideas Pendientes de Implementar (Balón 3D)
-
-Se discutieron las siguientes interacciones avanzadas para el balón 3D del Hero. Aún no se han desarrollado. El usuario puede elegir cuál implementar:
-
-1. **🎰 Tragabalón (Gira x10 → Premio):** Al girar el balón 10 veces completas, se activa una animación de confeti y aparece un modal con un código de descuento único. Se guarda en `localStorage` para evitar repetición. *(Idea del usuario, altamente recomendada)*
-2. **🌀 Ruleta de Premios:** Combinar los 10 giros con una ruleta visible de beneficios (cerveza gratis, mesa VIP, 10% en tienda).
-3. **🎤 Balón Oráculo:** Clic en el balón → muestra una frase futbolera aleatoria tipo "Bola 8 mágica".
-4. **💥 El Chutazo:** Doble clic → el balón sale disparado y rebota en los bordes de la pantalla.
-5. **🎙️ Modo Narrador:** Clic sostenido y soltar → grito de "¡¡GOOOL!!" con audio y efecto de pantalla temblorosa.
+## Pendientes y Próximos Pasos (Dependiendo del feedback del cliente)
+1. **Base de Datos Real:** Implementar Prisma y una BD (PostgreSQL/MySQL) para almacenar reservas de mesas, salas VIP, pedidos de tienda y cotizaciones B2B reales.
+2. **Optimización 3D Móvil (Opcional):** Si el cliente requiere 3D en celulares, desarrollar un modelo *Low-Poly* con texturas *Normal Mapping* y materiales básicos para asegurar rendimiento.
+3. **Juego Interactivo "Tragabalón" 3D:** Integrar una experiencia lúdica 3D en la plataforma.
+4. **Datos Reales:** Reemplazar el número de WhatsApp dummy por el real de la empresa y ajustar precios de paquetes.
+5. **Dominio Personalizado:** Configurar el dominio propio (ej. `ecosenderos.com.co` o el que elijan) apuntando a Vercel a través de gestión DNS.
 
 ---
-
-## 🚀 Próximas Páginas por Construir
-
-Cuando retomes el proyecto, indica al asistente en qué página enfocarse y que lea este archivo primero:
-
-1. **Página de Menú (`/menu`):**
-   - Categorías: Entradas, Platos Fuertes, Coctelería, Cervezas.
-   - Tarjetas de producto con descripciones e imágenes apetitosas.
-
-2. **Página de Salas VIP (`/salas-vip`):**
-   - Galería dedicada a los espacios privados.
-   - Formulario avanzado: fecha, cantidad de personas, partido deseado.
-
-3. **Tienda Futbolera (`/tienda`):**
-   - Catálogo de camisetas, balones y guayos.
-   - Efectos hover estilo e-commerce moderno.
-
-4. **Contacto y FAQ (`/contacto`):**
-   - Mapa de ubicación embebido o simulado.
-   - Acordeones interactivos para preguntas frecuentes.
-
-> **Instrucción para el asistente al retomar:** *"Lee el archivo `STATUS.md` en la raíz del proyecto para entender el contexto completo. Luego comencemos a trabajar en la página de [Nombre]."*
+*Última actualización: 04 de Julio de 2026. Esperando feedback del cliente tras la presentación del MVP.*

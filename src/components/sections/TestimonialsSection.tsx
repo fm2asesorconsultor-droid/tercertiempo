@@ -1,27 +1,9 @@
 import { FadeIn } from "@/components/ui/FadeIn"
 import { StarIcon } from "lucide-react"
+import { getPublishedTestimonials } from "@/lib/data/testimonials"
 
-export function TestimonialsSection() {
-  const testimonials = [
-    {
-      id: 1,
-      name: "Carlos M.",
-      text: "El mejor lugar para ver la final. La pantalla gigante es increíble y el sonido te hace sentir en el estadio.",
-      rating: 5
-    },
-    {
-      id: 2,
-      name: "Andrés F.",
-      text: "Alquilamos una Sala VIP para el cumpleaños de mi hermano. La atención de primera y la comida deliciosa.",
-      rating: 5
-    },
-    {
-      id: 3,
-      name: "Felipe G.",
-      text: "Gran ambiente futbolero. Además me llevé la camiseta retro que estaba buscando en la tienda.",
-      rating: 5
-    }
-  ]
+export async function TestimonialsSection() {
+  const testimonials = await getPublishedTestimonials()
 
   return (
     <section className="w-full bg-background-primary pt-[25px] pb-24 border-t border-zinc-800">
@@ -33,7 +15,7 @@ export function TestimonialsSection() {
             </h2>
           </FadeIn>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-3">
           {testimonials.map((test, idx) => (
             <FadeIn key={test.id} delay={0.1 * idx} direction="up">
@@ -43,7 +25,7 @@ export function TestimonialsSection() {
                     <StarIcon key={i} className="h-4 w-4 fill-accent-primary text-accent-primary" />
                   ))}
                 </div>
-                <p className="flex-1 text-text-secondary italic mb-6">"{test.text}"</p>
+                <p className="flex-1 text-text-secondary italic mb-6">&quot;{test.text}&quot;</p>
                 <p className="font-bold text-white">— {test.name}</p>
               </div>
             </FadeIn>

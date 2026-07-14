@@ -1,68 +1,22 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Check, Zap, Trophy, Crown } from "lucide-react"
+import { Check, Zap, Trophy, Crown, type LucideIcon } from "lucide-react"
+import type { CoworkPackage, CoworkPackageFeature } from "@/generated/prisma/client"
 
-const packages = [
-  {
-    id: "medio-tiempo",
-    icon: Zap,
-    name: "Medio Tiempo",
-    subtitle: "AM · 8:00 AM – 1:00 PM",
-    price: "desde $250.000",
-    color: "zinc",
-    features: [
-      "Salón principal hasta 30 personas",
-      "WiFi empresarial de alta velocidad",
-      "Pantalla 85\" con HDMI",
-      "Café y agua incluidos",
-      "1 asistente de sala",
-      "Parqueadero",
-    ],
-    cta: "Reservar Medio Tiempo",
-  },
-  {
-    id: "tiempo-completo",
-    icon: Trophy,
-    name: "Tiempo Completo",
-    subtitle: "Full Day · 8:00 AM – 6:00 PM",
-    price: "desde $480.000",
-    color: "accent",
-    popular: true,
-    features: [
-      "Salón principal hasta 60 personas",
-      "WiFi empresarial de alta velocidad",
-      "Pantalla 85\" con HDMI y sonido",
-      "2 coffee breaks incluidos",
-      "Almuerzo corporativo incluido",
-      "Asistente de sala dedicado",
-      "Parqueadero",
-      "Grabación de sesión (opcional)",
-    ],
-    cta: "Reservar Tiempo Completo",
-  },
-  {
-    id: "estadio",
-    icon: Crown,
-    name: "Paquete Estadio",
-    subtitle: "Evento Especial · A convenir",
-    price: "Cotización personalizada",
-    color: "zinc",
-    features: [
-      "Todo del paquete Tiempo Completo",
-      "Sala VIP privada disponible",
-      "Facilitador profesional incluido",
-      "Materiales para talleres (LSP, DT...)",
-      "Catering personalizado",
-      "Fotografía del evento",
-      "Transmisión en vivo",
-      "Brindis final de cierre",
-    ],
-    cta: "Solicitar Cotización",
-  },
-]
+const ICONS: Record<string, LucideIcon> = {
+  zap: Zap,
+  trophy: Trophy,
+  crown: Crown,
+}
 
-export function CoworkPackages() {
+const formatCOP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
+
+type Props = {
+  packages: (CoworkPackage & { features: CoworkPackageFeature[] })[]
+}
+
+export function CoworkPackages({ packages }: Props) {
   const scrollToForm = () => {
     document.getElementById("cotizar")?.scrollIntoView({ behavior: "smooth" })
   }
@@ -80,8 +34,8 @@ export function CoworkPackages() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {packages.map((pkg, i) => {
-            const Icon = pkg.icon
-            const isAccent = pkg.color === "accent"
+            const Icon = ICONS[pkg.iconKey] ?? Zap
+            const isAccent = pkg.theme === "ACCENT"
             return (
               <motion.div
                 key={pkg.id}
@@ -107,13 +61,13 @@ export function CoworkPackages() {
 
                 <h3 className="text-2xl font-black text-white mb-1">{pkg.name}</h3>
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{pkg.subtitle}</p>
-                <p className={`text-3xl font-black mb-8 ${isAccent ? "text-accent-primary" : "text-white"}`}>{pkg.price}</p>
+                <p className={`text-3xl font-black mb-8 ${isAccent ? "text-accent-primary" : "text-white"}`}>{formatCOP.format(pkg.price)}</p>
 
                 <ul className="space-y-3 mb-10 flex-1">
                   {pkg.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm text-zinc-300">
+                    <li key={f.id} className="flex items-start gap-3 text-sm text-zinc-300">
                       <Check className={`w-4 h-4 mt-0.5 shrink-0 ${isAccent ? "text-accent-primary" : "text-green-500"}`} />
-                      {f}
+                      {f.text}
                     </li>
                   ))}
                 </ul>
@@ -126,7 +80,7 @@ export function CoworkPackages() {
                       : "bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 hover:border-zinc-600"
                   }`}
                 >
-                  {pkg.cta}
+                  {pkg.ctaLabel}
                 </button>
               </motion.div>
             )

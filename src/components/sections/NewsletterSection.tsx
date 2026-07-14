@@ -1,8 +1,5 @@
 import { FadeIn } from "@/components/ui/FadeIn"
-import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/Input"
-import { Send } from "lucide-react"
-import Image from "next/image"
+import { NewsletterForm } from "@/components/ui/NewsletterForm"
 
 export function NewsletterSection() {
   return (
@@ -34,18 +31,7 @@ export function NewsletterSection() {
           </FadeIn>
           
           <FadeIn direction="left" delay={0.2} className="w-full flex-1 max-w-md lg:ml-auto">
-            <form className="flex w-full gap-2 bg-black/30 p-2 rounded-lg backdrop-blur-md border border-white/20 shadow-2xl">
-              <Input 
-                type="email" 
-                placeholder="Tu correo electrónico" 
-                className="flex-1 bg-white/95 text-black border-0 focus-visible:ring-2 focus-visible:ring-black placeholder:text-zinc-600 font-medium"
-                required
-              />
-              <Button type="submit" variant="default" className="bg-black text-white hover:bg-zinc-800 shrink-0 font-bold border border-zinc-700">
-                <span className="hidden sm:inline mr-2">SUSCRIBIRME</span>
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
+            <NewsletterForm source="NEWSLETTER_SECTION" variant="hero" />
           </FadeIn>
         </div>
       </div>

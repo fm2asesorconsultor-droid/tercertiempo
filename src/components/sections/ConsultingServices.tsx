@@ -2,55 +2,13 @@
 
 import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
+import type { ConsultingService } from "@/generated/prisma/client"
 
-const services = [
-  {
-    id: "lsp",
-    name: "Lego Serious Play",
-    tag: "Metodología Premium",
-    description: "Una técnica de facilitación probada globalmente donde los participantes construyen modelos con LEGO para explorar desafíos empresariales, alinear visiones y tomar decisiones estratégicas. Ideal para equipos directivos.",
-    image: "/cowork/lego_serious_play.png",
-    duration: "4 – 8 horas",
-    participants: "5 – 20 personas",
-    highlight: "Incluye facilitador certificado y materiales LEGO",
-    tag2: "🧩 Innovación"
-  },
-  {
-    id: "dt",
-    name: "Design Thinking & Sprint",
-    tag: "Innovación",
-    description: "Metodología centrada en las personas para resolver problemas complejos de forma ágil. Desde la empatía con el usuario hasta el prototipado rápido de soluciones, todo en un día intenso y transformador.",
-    image: "/cowork/design_thinking.png",
-    duration: "6 – 8 horas",
-    participants: "10 – 40 personas",
-    highlight: "Post-its, prototipos y un plan de acción concreto",
-    tag2: "💡 Creatividad"
-  },
-  {
-    id: "team",
-    name: "Team Building Deportivo",
-    tag: "Integración",
-    description: "Combina el poder del deporte con la dinámica de equipo. Desde torneos internos en la cancha de fútbol sintético hasta retos grupales en el bar. Una forma diferente y memorable de fortalecer equipos.",
-    image: "/cowork/team_building.png",
-    duration: "3 – 5 horas",
-    participants: "10 – 60 personas",
-    highlight: "Incluye uso de la cancha sintética y brindis",
-    tag2: "⚽ Deporte"
-  },
-  {
-    id: "coaching",
-    name: "Coaching Ejecutivo",
-    tag: "Liderazgo",
-    description: "Sesiones individuales o de equipo en las Salas VIP privadas. Un espacio íntimo, diferente a la oficina, que facilita conversaciones profundas, reflexión estratégica y planes de desarrollo de liderazgo.",
-    image: "/cowork/coaching_ejecutivo.png",
-    duration: "2 – 4 horas",
-    participants: "1 – 10 personas",
-    highlight: "Sala VIP privada con pantalla 85\" y sofás de cuero",
-    tag2: "🎯 Liderazgo"
-  },
-]
+type Props = {
+  services: ConsultingService[]
+}
 
-export function ConsultingServices() {
+export function ConsultingServices({ services }: Props) {
   const scrollToForm = () => {
     document.getElementById("cotizar")?.scrollIntoView({ behavior: "smooth" })
   }
@@ -79,7 +37,7 @@ export function ConsultingServices() {
               {/* Image */}
               <div className="relative h-52 overflow-hidden">
                 <img
-                  src={service.image}
+                  src={service.imageUrl}
                   alt={service.name}
                   className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700"
                 />

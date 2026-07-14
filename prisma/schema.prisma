@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,413 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ────────────────────────────────────────────────────────────────
+// Auth
+// ────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  passwordHash        String
+  sessionVersion      Int       @default(1)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// ────────────────────────────────────────────────────────────────
+// Site-wide singleton content (fixed id = 1)
+// ────────────────────────────────────────────────────────────────
+
+model SiteSettings {
+  id             Int      @id @default(1)
+  whatsappNumber String
+  contactEmail   String
+  contactPhone   String
+  address        String
+  mapsEmbedUrl   String
+  instagramUrl   String?
+  facebookUrl    String?
+  logoUrl        String
+  logoPublicId   String?
+  schedule       Json
+  updatedAt      DateTime @updatedAt
+}
+
+model HeroContent {
+  id                      Int      @id @default(1)
+  eyebrow                 String
+  headline                String
+  body                    String
+  ctaPrimaryLabel         String
+  ctaSecondaryLabel       String
+  backgroundImageUrl      String
+  backgroundImagePublicId String?
+  updatedAt               DateTime @updatedAt
+}
+
+model ExperienceCard {
+  id            Int     @id @default(autoincrement())
+  iconKey       String
+  title         String
+  description   String
+  imageUrl      String
+  imagePublicId String?
+  order         Int     @default(0)
+}
+
+model PremiumExperienceContent {
+  id             Int      @id @default(1)
+  headline       String
+  headlineAccent String
+  body           String
+  imageUrl       String
+  imagePublicId  String?
+  updatedAt      DateTime @updatedAt
+}
+
+model PremiumBenefit {
+  id    Int    @id @default(autoincrement())
+  text  String
+  order Int    @default(0)
+}
+
+model BirthdayContent {
+  id                      Int      @id @default(1)
+  eyebrow                 String
+  headline                String
+  headlineAccent          String
+  body                    String
+  backgroundImageUrl      String
+  backgroundImagePublicId String?
+  ctaLabel                String
+  updatedAt               DateTime @updatedAt
+}
+
+model BirthdayPerk {
+  id      Int    @id @default(autoincrement())
+  iconKey String
+  text    String
+  order   Int    @default(0)
+}
+
+// ────────────────────────────────────────────────────────────────
+// List content entities
+// ────────────────────────────────────────────────────────────────
+
+enum GalleryCategory {
+  CUMPLEANOS
+  EVENTOS
+  VIP
+  AMIGOS
+}
+
+model GalleryImage {
+  id             Int              @id @default(autoincrement())
+  imageUrl       String
+  imagePublicId  String?
+  title          String
+  category       GalleryCategory?
+  featuredOnHome Boolean          @default(false)
+  order          Int              @default(0)
+  gridSpan       String?
+}
+
+model Testimonial {
+  id        Int     @id @default(autoincrement())
+  name      String
+  text      String
+  rating    Int
+  published Boolean @default(true)
+  order     Int     @default(0)
+}
+
+model Team {
+  id           Int     @id @default(autoincrement())
+  name         String
+  logoUrl      String
+  logoPublicId String?
+  homeMatches  Match[] @relation("HomeTeam")
+  awayMatches  Match[] @relation("AwayTeam")
+}
+
+enum MatchStatus {
+  UPCOMING
+  LIVE
+  FINISHED
+}
+
+model Match {
+  id           Int           @id @default(autoincrement())
+  homeTeamId   Int
+  homeTeam     Team          @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId   Int
+  awayTeam     Team          @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  competition  String
+  kickoffAt    DateTime
+  status       MatchStatus   @default(UPCOMING)
+  homeScore    Int?
+  awayScore    Int?
+  clockMinute  Int?
+  hype         Int           @default(0)
+  isFeatured   Boolean       @default(false)
+  isVIP        Boolean       @default(false)
+  showOnHome   Boolean       @default(false)
+  reservations Reservation[]
+}
+
+enum DemandLevel {
+  HIGH
+  MID
+  LOW
+}
+
+model MatchDemandDay {
+  id         Int         @id @default(autoincrement())
+  date       DateTime    @unique
+  teamsLabel String
+  demand     DemandLevel
+}
+
+model Zone {
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  name          String
+  floor         Int
+  capacityLabel String
+  priceLabel    String
+  description   String
+  imageUrl      String?
+  imagePublicId String?
+  order         Int           @default(0)
+  reservations  Reservation[]
+}
+
+enum SalaStatus {
+  AVAILABLE
+  LIMITED
+  FULL
+}
+
+model SalaVip {
+  id            Int           @id @default(autoincrement())
+  name          String
+  imageUrl      String
+  imagePublicId String?
+  capacity      Int
+  status        SalaStatus    @default(AVAILABLE)
+  features      String[]
+  priceLabel    String
+  reservations  Reservation[]
+}
+
+enum ProductCategory {
+  CAMISETAS
+  GORRAS
+  ACCESORIOS
+}
+
+model Product {
+  id            Int             @id @default(autoincrement())
+  name          String
+  category      ProductCategory
+  price         Int
+  imageUrl      String
+  imagePublicId String?
+  isNew         Boolean         @default(false)
+  canCustomize  Boolean         @default(false)
+  orders        ProductOrder[]
+}
+
+model MenuCategory {
+  id      Int        @id @default(autoincrement())
+  name    String
+  iconKey String
+  order   Int        @default(0)
+  items   MenuItem[]
+}
+
+model MenuItem {
+  id                Int          @id @default(autoincrement())
+  categoryId        Int
+  category          MenuCategory @relation(fields: [categoryId], references: [id])
+  name              String
+  description       String
+  price             Int
+  imageUrl          String
+  imagePublicId     String?
+  pairingSuggestion String?
+  isMVP             Boolean      @default(false)
+  order             Int          @default(0)
+}
+
+enum CoworkTheme {
+  ZINC
+  ACCENT
+}
+
+model CoworkPackage {
+  id       Int                    @id @default(autoincrement())
+  slug     String                 @unique
+  iconKey  String
+  name     String
+  subtitle String
+  price    Int
+  theme    CoworkTheme            @default(ZINC)
+  popular  Boolean                @default(false)
+  ctaLabel String
+  order    Int                    @default(0)
+  features CoworkPackageFeature[]
+  quotes   B2BQuote[]
+}
+
+model CoworkPackageFeature {
+  id              Int           @id @default(autoincrement())
+  coworkPackageId Int
+  coworkPackage   CoworkPackage @relation(fields: [coworkPackageId], references: [id], onDelete: Cascade)
+  text            String
+  order           Int           @default(0)
+}
+
+model ConsultingService {
+  id            Int     @id @default(autoincrement())
+  name          String
+  tag           String
+  tag2          String
+  description   String
+  imageUrl      String
+  imagePublicId String?
+  duration      String
+  participants  String
+  highlight     String
+  order         Int     @default(0)
+}
+
+model QuoteExtra {
+  id      Int    @id @default(autoincrement())
+  label   String
+  price   Int
+  iconKey String
+  order   Int    @default(0)
+}
+
+model EventType {
+  id    Int    @id @default(autoincrement())
+  label String
+  order Int    @default(0)
+}
+
+model CoworkStat {
+  id    Int    @id @default(autoincrement())
+  value String
+  label String
+  order Int    @default(0)
+}
+
+// ────────────────────────────────────────────────────────────────
+// Transactional entities (real persistence)
+// ────────────────────────────────────────────────────────────────
+
+enum ReservationType {
+  MESA
+  SALA
+  PARTIDO
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Reservation {
+  id               Int               @id @default(autoincrement())
+  type             ReservationType
+  zoneId           Int?
+  zone             Zone?             @relation(fields: [zoneId], references: [id])
+  salaVipId        Int?
+  salaVip          SalaVip?          @relation(fields: [salaVipId], references: [id])
+  matchId          Int?
+  match            Match?            @relation(fields: [matchId], references: [id])
+  salaPackage      String?
+  reservationDate  DateTime
+  partySize        Int
+  customerName     String
+  customerPhone    String
+  customerEmail    String?
+  status           ReservationStatus @default(PENDING)
+  confirmationCode String            @unique
+  notes            String?
+  createdAt        DateTime          @default(now())
+}
+
+enum PickupWindow {
+  TODAY
+  TOMORROW
+  WEEKEND
+}
+
+enum ProductOrderStatus {
+  PENDING
+  CONFIRMED
+  READY
+  CANCELLED
+}
+
+model ProductOrder {
+  id               Int                @id @default(autoincrement())
+  productId        Int
+  product          Product            @relation(fields: [productId], references: [id])
+  size             String
+  customName       String?
+  customNumber     String?
+  pickupWindow     PickupWindow
+  customerName     String
+  customerPhone    String
+  customerEmail    String?
+  status           ProductOrderStatus @default(PENDING)
+  confirmationCode String             @unique
+  createdAt        DateTime           @default(now())
+}
+
+enum B2BQuoteStatus {
+  NEW
+  CONTACTED
+  WON
+  LOST
+}
+
+model B2BQuote {
+  id                       Int            @id @default(autoincrement())
+  packageId                Int?
+  package                  CoworkPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  packageNameSnapshot      String
+  packageBasePriceSnapshot Int
+  eventType                String
+  participants             Int
+  selectedExtras           Json
+  computedTotal            Int
+  companyName              String
+  customerName             String
+  customerPhone            String
+  customerEmail            String?
+  preferredDate            DateTime?
+  message                  String?
+  status                   B2BQuoteStatus @default(NEW)
+  createdAt                DateTime       @default(now())
+}
+
+enum NewsletterSource {
+  FOOTER
+  NEWSLETTER_SECTION
+}
+
+model NewsletterSubscriber {
+  id        Int              @id @default(autoincrement())
+  email     String           @unique
+  source    NewsletterSource
+  createdAt DateTime         @default(now())
 }

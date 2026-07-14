@@ -4,29 +4,29 @@ import { useState } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Camera, Heart, Share2, X } from "lucide-react"
+import type { GalleryImage } from "@/generated/prisma/client"
+import { FULL_GALLERY_SPAN } from "@/lib/gallery-spans"
 
-// Mock data for the gallery using existing images
-const galleryData = [
-  { id: 1, src: "/colombia_birthday.png", category: "Cumpleaños", title: "Celebración Selección", span: "col-span-1 md:col-span-2 row-span-2" },
-  { id: 2, src: "/gallery_bar_central.png", category: "Eventos", title: "Noche de Champions", span: "col-span-1 row-span-1" },
-  { id: 3, src: "/gallery_sala_vip.png", category: "VIP", title: "Reserva Privada", span: "col-span-1 row-span-1" },
-  { id: 4, src: "/pantalla_gigante.png", category: "Eventos", title: "Final de Copa", span: "col-span-1 md:col-span-2 row-span-1" },
-  { id: 5, src: "/premium_experience.png", category: "VIP", title: "Experiencia Premium", span: "col-span-1 row-span-2" },
-  { id: 6, src: "/gallery_platos.png", category: "Amigos", title: "Tercer Tiempo", span: "col-span-1 row-span-1" },
-  { id: 7, src: "/birthday_celebration.png", category: "Cumpleaños", title: "Festejo Inolvidable", span: "col-span-1 md:col-span-2 row-span-1" },
-]
-
-type GalleryItem = typeof galleryData[0]
+const CATEGORY_LABELS: Record<string, string> = {
+  CUMPLEANOS: "Cumpleaños",
+  EVENTOS: "Eventos",
+  VIP: "VIP",
+  AMIGOS: "Amigos",
+}
 
 const categories = ["Todos", "Eventos", "Cumpleaños", "VIP", "Amigos"]
 
-export function FriendsGallerySection() {
-  const [activeCategory, setActiveCategory] = useState("Todos")
-  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null)
+type Props = {
+  images: GalleryImage[]
+}
 
-  const filteredImages = activeCategory === "Todos" 
-    ? galleryData 
-    : galleryData.filter(img => img.category === activeCategory)
+export function FriendsGallerySection({ images }: Props) {
+  const [activeCategory, setActiveCategory] = useState("Todos")
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
+
+  const filteredImages = activeCategory === "Todos"
+    ? images
+    : images.filter((img) => CATEGORY_LABELS[img.category ?? ""] === activeCategory)
 
   // Prevent scroll when modal is open
   if (typeof window !== 'undefined') {
@@ -63,7 +63,7 @@ export function FriendsGallerySection() {
         </div>
 
         {/* Filter Tabs */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -75,8 +75,8 @@ export function FriendsGallerySection() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
-                activeCategory === cat 
-                  ? "bg-accent-primary text-white shadow-[0_0_15px_rgba(255,69,0,0.5)]" 
+                activeCategory === cat
+                  ? "bg-accent-primary text-white shadow-[0_0_15px_rgba(255,69,0,0.5)]"
                   : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
               }`}
             >
@@ -86,7 +86,7 @@ export function FriendsGallerySection() {
         </motion.div>
 
         {/* Dynamic Grid / Bento Layout */}
-        <motion.div 
+        <motion.div
           layout
           className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[250px] gap-4"
         >
@@ -100,21 +100,21 @@ export function FriendsGallerySection() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-                className={`relative group overflow-hidden rounded-2xl bg-zinc-900 cursor-pointer ${item.span}`}
+                className={`relative group overflow-hidden rounded-2xl bg-zinc-900 cursor-pointer ${FULL_GALLERY_SPAN[item.gridSpan ?? "normal"] ?? FULL_GALLERY_SPAN.normal}`}
                 onClick={() => setSelectedImage(item)}
               >
                 <motion.div layoutId={`image-${item.id}`} className="absolute inset-0">
                   <Image
-                    src={item.src}
+                    src={item.imageUrl}
                     alt={item.title}
                     fill
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                 </motion.div>
-                
+
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
+
                 {/* Border Glow on Hover */}
                 <div className="absolute inset-0 border-2 border-accent-primary/0 group-hover:border-accent-primary/50 rounded-2xl transition-colors duration-300 pointer-events-none" />
 
@@ -123,20 +123,20 @@ export function FriendsGallerySection() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xs font-bold text-accent-primary uppercase tracking-wider mb-1 block">
-                        {item.category}
+                        {CATEGORY_LABELS[item.category ?? ""] ?? ""}
                       </span>
                       <h3 className="text-xl font-bold text-white leading-tight">
                         {item.title}
                       </h3>
                     </div>
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={(e) => e.stopPropagation()}
                         className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-accent-primary transition-colors"
                       >
                         <Heart className="w-5 h-5" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => e.stopPropagation()}
                         className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-accent-primary transition-colors"
                       >
@@ -156,7 +156,7 @@ export function FriendsGallerySection() {
         </motion.div>
 
         {/* Load More Button */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -179,30 +179,30 @@ export function FriendsGallerySection() {
             onClick={() => setSelectedImage(null)}
           >
             {/* Close Button */}
-            <button 
+            <button
               className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-accent-primary flex items-center justify-center text-white transition-colors z-10"
               onClick={() => setSelectedImage(null)}
             >
               <X className="w-6 h-6" />
             </button>
 
-            <motion.div 
+            <motion.div
               layoutId={`card-${selectedImage.id}`}
               className="relative w-full max-w-5xl aspect-video md:aspect-auto md:h-[80vh] bg-zinc-900 rounded-xl overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()} // Evitar cerrar al hacer clic en la foto
             >
               <motion.div layoutId={`image-${selectedImage.id}`} className="absolute inset-0">
                 <Image
-                  src={selectedImage.src}
+                  src={selectedImage.imageUrl}
                   alt={selectedImage.title}
                   fill
                   className="object-contain" // object-contain para no recortar la imagen en el modal
                   priority
                 />
               </motion.div>
-              
+
               {/* Modal Details Overlay */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -211,7 +211,7 @@ export function FriendsGallerySection() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                   <div>
                     <span className="text-sm font-bold text-accent-primary uppercase tracking-wider mb-2 block">
-                      {selectedImage.category}
+                      {CATEGORY_LABELS[selectedImage.category ?? ""] ?? ""}
                     </span>
                     <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">
                       {selectedImage.title}
